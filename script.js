@@ -103,9 +103,6 @@ function renderSpiels(filter = "") {
 
     card.className = "spiel-card";
 
-    // ESCAPE BACKTICKS
-    const safeText = spiel.text.replace(/`/g, "\\`");
-
     card.innerHTML = `
       <div class="spiel-title">
         ${spiel.title}
@@ -119,7 +116,7 @@ function renderSpiels(filter = "") {
 
         <button
           class="copy-btn"
-          onclick="copySpiel(\`${safeText}\`)"
+          onclick='copySpiel(${JSON.stringify(spiel.text)})'
         >
           Copy
         </button>
