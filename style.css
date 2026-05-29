@@ -1,0 +1,180 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: Arial, sans-serif;
+}
+
+body{
+  background: #f4f7fb;
+  padding: 30px;
+  color:#333;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+}
+
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:30px;
+  flex-wrap:wrap;
+}
+
+.search-bar{
+  flex:1;
+  min-width:250px;
+}
+
+.search-bar input{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+  outline:none;
+}
+
+.add-btn{
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:14px 20px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:16px;
+  transition:0.3s;
+}
+
+.add-btn:hover{
+  background:#1d4ed8;
+  transform:translateY(-2px);
+}
+
+.spiel-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:25px;
+}
+
+.spiel-card{
+  background:white;
+  border-radius:15px;
+  padding:20px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.08);
+  transition:0.3s;
+  position:relative;
+}
+
+.spiel-card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 15px 25px rgba(0,0,0,0.15);
+}
+
+.spiel-title{
+  font-size:20px;
+  font-weight:bold;
+  margin-bottom:15px;
+  color:#111827;
+}
+
+.spiel-content{
+  white-space:pre-wrap;
+  line-height:1.6;
+  margin-bottom:20px;
+  color:#4b5563;
+}
+
+.card-buttons{
+  display:flex;
+  gap:10px;
+}
+
+.edit-btn,
+.delete-btn{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  color:white;
+  transition:0.3s;
+}
+
+.edit-btn{
+  background:#10b981;
+}
+
+.edit-btn:hover{
+  background:#059669;
+}
+
+.delete-btn{
+  background:#ef4444;
+}
+
+.delete-btn:hover{
+  background:#dc2626;
+}
+
+/* Modal */
+.modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+
+.modal-content{
+  background:white;
+  width:90%;
+  max-width:500px;
+  padding:25px;
+  border-radius:15px;
+}
+
+.modal-content h2{
+  margin-bottom:20px;
+}
+
+.modal-content input,
+.modal-content textarea{
+  width:100%;
+  padding:12px;
+  margin-bottom:15px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  outline:none;
+  font-size:15px;
+}
+
+.modal-content textarea{
+  min-height:150px;
+  resize:vertical;
+}
+
+.save-btn{
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:12px 18px;
+  border-radius:8px;
+  cursor:pointer;
+  width:100%;
+  font-size:16px;
+}
+
+.save-btn:hover{
+  background:#1d4ed8;
+}
