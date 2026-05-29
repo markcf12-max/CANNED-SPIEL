@@ -178,3 +178,49 @@ body{
 .save-btn:hover{
   background:#1d4ed8;
 }
+/* Delete Modal */
+
+.delete-modal-content{
+  max-width:400px;
+  text-align:center;
+}
+
+.delete-text{
+  margin:20px 0;
+  color:#555;
+  font-size:16px;
+}
+
+.delete-actions{
+  display:flex;
+  gap:15px;
+  margin-top:20px;
+}
+
+.cancel-btn,
+.confirm-delete-btn{
+  flex:1;
+  border:none;
+  padding:12px;
+  border-radius:8px;
+  cursor:pointer;
+  color:white;
+  font-size:15px;
+  transition:0.3s;
+}
+
+.cancel-btn{
+  background:#6b7280;
+}
+
+.cancel-btn:hover{
+  background:#4b5563;
+}
+
+.confirm-delete-btn{
+  background:#ef4444;
+}
+
+.confirm-delete-btn:hover{
+  background:#dc2626;
+}
