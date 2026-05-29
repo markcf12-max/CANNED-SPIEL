@@ -154,7 +154,7 @@ window.copySpiel = async function(text){
 
     await navigator.clipboard.writeText(text);
 
-    alert("Spiel copied!");
+    console.log("Spiel copied!");
 
   } catch(err){
 
