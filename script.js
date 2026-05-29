@@ -103,6 +103,9 @@ function renderSpiels(filter = "") {
 
     card.className = "spiel-card";
 
+    // ESCAPE BACKTICKS
+    const safeText = spiel.text.replace(/`/g, "\\`");
+
     card.innerHTML = `
       <div class="spiel-title">
         ${spiel.title}
@@ -113,6 +116,13 @@ function renderSpiels(filter = "") {
       </div>
 
       <div class="card-buttons">
+
+        <button
+          class="copy-btn"
+          onclick="copySpiel(\`${safeText}\`)"
+        >
+          Copy
+        </button>
 
         <button
           class="edit-btn"
@@ -135,6 +145,26 @@ function renderSpiels(filter = "") {
 
   });
 
+}
+
+/* =========================
+   COPY SPIEL
+========================= */
+
+window.copySpiel = async function(text){
+
+  try{
+
+    await navigator.clipboard.writeText(text);
+
+    alert("Spiel copied!");
+
+  } catch(err){
+
+    console.error("Copy failed:", err);
+
+    alert("Failed to copy.");
+  }
 }
 
 /* =========================
