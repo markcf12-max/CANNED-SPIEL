@@ -78,12 +78,33 @@ function editSpiel(index){
   modal.style.display = "flex";
 }
 
+let deleteIndex = null;
+
+const deleteModal = document.getElementById("deleteModal");
+
 function deleteSpiel(index){
-  if(confirm("Delete this spiel?")){
-    spiels.splice(index, 1);
+  deleteIndex = index;
+  deleteModal.style.display = "flex";
+}
+
+function closeDeleteModal(){
+  deleteModal.style.display = "none";
+}
+
+function confirmDelete(){
+
+  if(deleteIndex !== null){
+
+    spiels.splice(deleteIndex, 1);
+
     localStorage.setItem("spiels", JSON.stringify(spiels));
+
     renderSpiels();
+
+    deleteIndex = null;
   }
+
+  closeDeleteModal();
 }
 
 document.getElementById("searchInput").addEventListener("input", (e) => {
