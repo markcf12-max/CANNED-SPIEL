@@ -29,26 +29,27 @@ const firebaseConfig = {
 };
 
 /* =========================
-   INITIALIZE FIREBASE
+   INIT
 ========================= */
 
 const app = initializeApp(firebaseConfig);
-
 const analytics = getAnalytics(app);
-
 const db = getFirestore(app);
 
 /* =========================
-   VARIABLES
+   SETTINGS
+========================= */
+
+// CHANGE THIS
+const isAdmin = true;
+
+/* =========================
+   STATE
 ========================= */
 
 let spiels = [];
 
-let editId = null;
-let deleteId = null;
-
 const spielGrid = document.getElementById("spielGrid");
-
 const modal = document.getElementById("modal");
 const deleteModal = document.getElementById("deleteModal");
 
@@ -60,284 +61,162 @@ async function loadSpiels() {
 
   spiels = [];
 
-  const querySnapshot = await getDocs(
-    collection(db, "spiels")
-  );
+  const snapshot = await getDocs(collection(db, "spiels"));
 
-  querySnapshot.forEach((docSnap) => {
-
+  snapshot.forEach((docSnap) => {
     spiels.push({
       id: docSnap.id,
       ...docSnap.data()
     });
-
   });
 
   renderSpiels();
 }
 
 /* =========================
-   RENDER SPIELS
+   RENDER
 ========================= */
 
 function renderSpiels(filter = "") {
 
   spielGrid.innerHTML = "";
 
-  const filtered = spiels.filter(spiel =>
-    spiel.title.toLowerCase().includes(filter.toLowerCase())
+  const filtered = spiels.filter(s =>
+    s.title.toLowerCase().includes(filter.toLowerCase())
   );
 
-  if(filtered.length === 0){
-
-    spielGrid.innerHTML = `
-      <p>No spiels found.</p>
-    `;
-
+  if (filtered.length === 0) {
+    spielGrid.innerHTML = `<p>No spiels found.</p>`;
     return;
   }
 
   filtered.forEach((spiel) => {
 
     const card = document.createElement("div");
-
     card.className = "spiel-card";
 
     card.innerHTML = `
-      <div class="spiel-title">
-        ${spiel.title}
-      </div>
+      <div class="spiel-title">${spiel.title}</div>
 
-      <div class="spiel-content">
-        ${spiel.text}
-      </div>
+      <div class="spiel-content">${spiel.text}</div>
 
       <div class="card-buttons">
 
-        <button
-          class="copy-btn"
-          onclick='copySpiel(${JSON.stringify(spiel.text)})'
-        >
+        <button class="copy-btn">
           Copy
         </button>
 
-        <button
-          class="edit-btn"
-          onclick="editSpiel('${spiel.id}')"
-        >
-          Edit
-        </button>
+        ${
+          isAdmin ? `
+            <button class="edit-btn" onclick="editSpiel('${spiel.id}')">
+              Edit
+            </button>
 
-        <button
-          class="delete-btn"
-          onclick="deleteSpiel('${spiel.id}')"
-        >
-          Delete
-        </button>
+            <button class="delete-btn" onclick="deleteSpiel('${spiel.id}')">
+              Delete
+            </button>
+          ` : ""
+        }
 
       </div>
     `;
 
+    // safer copy handler (no onclick string issues)
+    card.querySelector(".copy-btn").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(spiel.text);
+
+      const btn = card.querySelector(".copy-btn");
+      const original = btn.innerText;
+
+      btn.innerText = "Copied!";
+      setTimeout(() => btn.innerText = original, 1200);
+    });
+
     spielGrid.appendChild(card);
-
   });
-
-}
-
-/* =========================
-   COPY SPIEL
-========================= */
-
-window.copySpiel = async function(text){
-
-  try{
-
-    await navigator.clipboard.writeText(text);
-
-    console.log("Spiel copied!");
-
-  } catch(err){
-
-    console.error("Copy failed:", err);
-
-    alert("Failed to copy.");
-  }
-}
-
-/* =========================
-   OPEN MODAL
-========================= */
-
-window.openModal = function() {
-
-  modal.style.display = "flex";
-
-  document.getElementById("spielTitle").value = "";
-  document.getElementById("spielText").value = "";
-
-  document.getElementById("modalTitle").innerText =
-    "Add Spiel";
-
-  editId = null;
-}
-
-/* =========================
-   CLOSE MODAL
-========================= */
-
-window.closeModal = function() {
-
-  modal.style.display = "none";
 }
 
 /* =========================
    SAVE SPIEL
 ========================= */
 
-window.saveSpiel = async function() {
+window.saveSpiel = async function () {
 
-  const title = document
-    .getElementById("spielTitle")
-    .value
-    .trim();
+  const title = document.getElementById("spielTitle").value.trim();
+  const text = document.getElementById("spielText").value.trim();
 
-  const text = document
-    .getElementById("spielText")
-    .value
-    .trim();
-
-  if(title === "" || text === ""){
-
+  if (!title || !text) {
     alert("Please fill in all fields.");
-
     return;
   }
 
-  /* ADD */
-
-  if(editId === null){
-
-    await addDoc(
-      collection(db, "spiels"),
-      {
-        title,
-        text
-      }
-    );
-
-  }
-
-  /* EDIT */
-
-  else {
-
-    const spielRef = doc(db, "spiels", editId);
-
-    await updateDoc(spielRef, {
-      title,
-      text
-    });
-
-  }
-
-  closeModal();
-
-  loadSpiels();
-}
-
-/* =========================
-   EDIT SPIEL
-========================= */
-
-window.editSpiel = function(id) {
-
-  const spiel = spiels.find(
-    s => s.id === id
+  await addDoc(
+    collection(db, isAdmin ? "spiels" : "pendingSpiels"),
+    { title, text }
   );
 
-  if(!spiel) return;
+  closeModal();
+  loadSpiels();
+};
 
-  editId = id;
+/* =========================
+   EDIT (ADMIN ONLY)
+========================= */
 
-  document.getElementById("spielTitle").value =
-    spiel.title;
+window.editSpiel = function (id) {
 
-  document.getElementById("spielText").value =
-    spiel.text;
+  const spiel = spiels.find(s => s.id === id);
+  if (!spiel) return;
 
-  document.getElementById("modalTitle").innerText =
-    "Edit Spiel";
+  document.getElementById("spielTitle").value = spiel.title;
+  document.getElementById("spielText").value = spiel.text;
 
   modal.style.display = "flex";
-}
+};
 
 /* =========================
-   DELETE SPIEL
+   DELETE (ADMIN ONLY)
 ========================= */
 
-window.deleteSpiel = function(id){
+window.deleteSpiel = function (id) {
 
-  deleteId = id;
-
-  deleteModal.style.display = "flex";
-}
-
-/* =========================
-   CLOSE DELETE MODAL
-========================= */
-
-window.closeDeleteModal = function(){
-
-  deleteModal.style.display = "none";
-}
-
-/* =========================
-   CONFIRM DELETE
-========================= */
-
-window.confirmDelete = async function(){
-
-  if(deleteId){
-
-    await deleteDoc(
-      doc(db, "spiels", deleteId)
-    );
-
+  deleteDoc(doc(db, "spiels", id)).then(() => {
     loadSpiels();
-  }
+  });
 
-  closeDeleteModal();
-}
+};
+
+/* =========================
+   MODAL CONTROL
+========================= */
+
+window.openModal = function () {
+  modal.style.display = "flex";
+};
+
+window.closeModal = function () {
+  modal.style.display = "none";
+};
 
 /* =========================
    SEARCH
 ========================= */
 
-document
-  .getElementById("searchInput")
-  .addEventListener("input", (e) => {
-
-    renderSpiels(e.target.value);
-
-  });
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  renderSpiels(e.target.value);
+});
 
 /* =========================
-   CLOSE MODALS
+   CLOSE MODAL ON OUTSIDE CLICK
 ========================= */
 
-window.onclick = function(event){
-
-  if(event.target === modal){
-    closeModal();
-  }
-
-  if(event.target === deleteModal){
-    closeDeleteModal();
-  }
-}
+window.onclick = function (event) {
+  if (event.target === modal) closeModal();
+  if (event.target === deleteModal) deleteModal.style.display = "none";
+};
 
 /* =========================
-   INITIAL LOAD
+   INIT
 ========================= */
 
 loadSpiels();
