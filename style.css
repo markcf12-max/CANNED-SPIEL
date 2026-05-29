@@ -224,3 +224,17 @@ body{
 .confirm-delete-btn:hover{
   background:#dc2626;
 }
+.copy-btn{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  color:white;
+  transition:0.3s;
+  background:#3b82f6;
+}
+
+.copy-btn:hover{
+  background:#2563eb;
+}
