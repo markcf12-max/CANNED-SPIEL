@@ -1,12 +1,80 @@
-let spiels = JSON.parse(localStorage.getItem("spiels")) || [];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 
-let editIndex = null;
-let deleteIndex = null;
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+import {
+  getAnalytics
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDnuaDD2NQUCdbBZaVAqGz4PPotKLA83HU",
+  authDomain: "emailspiels.firebaseapp.com",
+  projectId: "emailspiels",
+  storageBucket: "emailspiels.firebasestorage.app",
+  messagingSenderId: "771863616641",
+  appId: "1:771863616641:web:41fcbee1f15d203bd28180",
+  measurementId: "G-22555KEHMY"
+};
+
+/* =========================
+   INITIALIZE FIREBASE
+========================= */
+
+const app = initializeApp(firebaseConfig);
+
+const analytics = getAnalytics(app);
+
+const db = getFirestore(app);
+
+/* =========================
+   VARIABLES
+========================= */
+
+let spiels = [];
+
+let editId = null;
+let deleteId = null;
 
 const spielGrid = document.getElementById("spielGrid");
 
 const modal = document.getElementById("modal");
 const deleteModal = document.getElementById("deleteModal");
+
+/* =========================
+   LOAD SPIELS
+========================= */
+
+async function loadSpiels() {
+
+  spiels = [];
+
+  const querySnapshot = await getDocs(
+    collection(db, "spiels")
+  );
+
+  querySnapshot.forEach((docSnap) => {
+
+    spiels.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+
+  });
+
+  renderSpiels();
+}
 
 /* =========================
    RENDER SPIELS
@@ -20,7 +88,7 @@ function renderSpiels(filter = "") {
     spiel.title.toLowerCase().includes(filter.toLowerCase())
   );
 
-  if (filtered.length === 0) {
+  if(filtered.length === 0){
 
     spielGrid.innerHTML = `
       <p>No spiels found.</p>
@@ -29,7 +97,7 @@ function renderSpiels(filter = "") {
     return;
   }
 
-  filtered.forEach((spiel, index) => {
+  filtered.forEach((spiel) => {
 
     const card = document.createElement("div");
 
@@ -46,16 +114,16 @@ function renderSpiels(filter = "") {
 
       <div class="card-buttons">
 
-        <button 
-          class="edit-btn" 
-          onclick="editSpiel(${index})"
+        <button
+          class="edit-btn"
+          onclick="editSpiel('${spiel.id}')"
         >
           Edit
         </button>
 
-        <button 
-          class="delete-btn" 
-          onclick="deleteSpiel(${index})"
+        <button
+          class="delete-btn"
+          onclick="deleteSpiel('${spiel.id}')"
         >
           Delete
         </button>
@@ -70,22 +138,28 @@ function renderSpiels(filter = "") {
 }
 
 /* =========================
-   ADD MODAL
+   OPEN MODAL
 ========================= */
 
-function openModal() {
+window.openModal = function() {
 
   modal.style.display = "flex";
 
   document.getElementById("spielTitle").value = "";
   document.getElementById("spielText").value = "";
 
-  document.getElementById("modalTitle").innerText = "Add Spiel";
+  document.getElementById("modalTitle").innerText =
+    "Add Spiel";
 
-  editIndex = null;
+  editId = null;
 }
 
-function closeModal() {
+/* =========================
+   CLOSE MODAL
+========================= */
+
+window.closeModal = function() {
+
   modal.style.display = "none";
 }
 
@@ -93,7 +167,7 @@ function closeModal() {
    SAVE SPIEL
 ========================= */
 
-function saveSpiel() {
+window.saveSpiel = async function() {
 
   const title = document
     .getElementById("spielTitle")
@@ -105,51 +179,64 @@ function saveSpiel() {
     .value
     .trim();
 
-  if (title === "" || text === "") {
+  if(title === "" || text === ""){
 
     alert("Please fill in all fields.");
 
     return;
   }
 
-  if (editIndex === null) {
+  /* ADD */
 
-    spiels.push({
+  if(editId === null){
+
+    await addDoc(
+      collection(db, "spiels"),
+      {
+        title,
+        text
+      }
+    );
+
+  }
+
+  /* EDIT */
+
+  else {
+
+    const spielRef = doc(db, "spiels", editId);
+
+    await updateDoc(spielRef, {
       title,
       text
     });
 
-  } else {
-
-    spiels[editIndex] = {
-      title,
-      text
-    };
   }
 
-  localStorage.setItem(
-    "spiels",
-    JSON.stringify(spiels)
-  );
-
-  renderSpiels();
-
   closeModal();
+
+  loadSpiels();
 }
 
 /* =========================
    EDIT SPIEL
 ========================= */
 
-function editSpiel(index) {
+window.editSpiel = function(id) {
 
-  editIndex = index;
+  const spiel = spiels.find(
+    s => s.id === id
+  );
+
+  if(!spiel) return;
+
+  editId = id;
 
   document.getElementById("spielTitle").value =
-    spiels[index].title;
+    spiel.title;
 
   document.getElementById("spielText").value =
-    spiels[index].text;
+    spiel.text;
 
   document.getElementById("modalTitle").innerText =
     "Edit Spiel";
@@ -158,35 +245,38 @@ function editSpiel(index) {
 }
 
 /* =========================
-   DELETE MODAL
+   DELETE SPIEL
 ========================= */
 
-function deleteSpiel(index) {
+window.deleteSpiel = function(id){
 
-  deleteIndex = index;
+  deleteId = id;
 
   deleteModal.style.display = "flex";
 }
 
-function closeDeleteModal() {
+/* =========================
+   CLOSE DELETE MODAL
+========================= */
+
+window.closeDeleteModal = function(){
 
   deleteModal.style.display = "none";
 }
 
-function confirmDelete() {
+/* =========================
+   CONFIRM DELETE
+========================= */
 
-  if (deleteIndex !== null) {
+window.confirmDelete = async function(){
 
-    spiels.splice(deleteIndex, 1);
+  if(deleteId){
 
-    localStorage.setItem(
-      "spiels",
-      JSON.stringify(spiels)
+    await deleteDoc(
+      doc(db, "spiels", deleteId)
     );
 
-    renderSpiels();
-
-    deleteIndex = null;
+    loadSpiels();
   }
 
   closeDeleteModal();
@@ -205,16 +295,16 @@ document
   });
 
 /* =========================
-   CLOSE MODALS ON OUTSIDE CLICK
+   CLOSE MODALS
 ========================= */
 
-window.onclick = function(event) {
+window.onclick = function(event){
 
-  if (event.target === modal) {
+  if(event.target === modal){
     closeModal();
   }
 
-  if (event.target === deleteModal) {
+  if(event.target === deleteModal){
     closeDeleteModal();
   }
 }
@@ -223,4 +313,4 @@ window.onclick = function(event) {
    INITIAL LOAD
 ========================= */
 
-renderSpiels();
+loadSpiels();
