@@ -1,21 +1,16 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-
 import {
   getFirestore,
   collection,
   addDoc,
   getDocs,
-  updateDoc,
   deleteDoc,
   doc
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-
-import {
-  getAnalytics
-} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
 
 /* =========================
-   FIREBASE CONFIG
+   FIREBASE
 ========================= */
 
 const firebaseConfig = {
@@ -28,19 +23,14 @@ const firebaseConfig = {
   measurementId: "G-22555KEHMY"
 };
 
-/* =========================
-   INIT
-========================= */
-
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getFirestore(app);
 
 /* =========================
-   SETTINGS
+   ADMIN MODE (CHANGE THIS)
 ========================= */
 
-// CHANGE THIS
 const isAdmin = true;
 
 /* =========================
@@ -51,10 +41,9 @@ let spiels = [];
 
 const spielGrid = document.getElementById("spielGrid");
 const modal = document.getElementById("modal");
-const deleteModal = document.getElementById("deleteModal");
 
 /* =========================
-   LOAD SPIELS
+   LOAD
 ========================= */
 
 async function loadSpiels() {
@@ -86,7 +75,7 @@ function renderSpiels(filter = "") {
   );
 
   if (filtered.length === 0) {
-    spielGrid.innerHTML = `<p>No spiels found.</p>`;
+    spielGrid.innerHTML = "<p>No spiels found.</p>";
     return;
   }
 
@@ -102,42 +91,46 @@ function renderSpiels(filter = "") {
 
       <div class="card-buttons">
 
-        <button class="copy-btn">
-          Copy
-        </button>
+        <button class="copy-btn">Copy</button>
 
-        ${
-          isAdmin ? `
-            <button class="edit-btn" onclick="editSpiel('${spiel.id}')">
-              Edit
-            </button>
-
-            <button class="delete-btn" onclick="deleteSpiel('${spiel.id}')">
-              Delete
-            </button>
-          ` : ""
-        }
+        ${isAdmin ? `
+          <button class="delete-btn">Delete</button>
+        ` : ""}
 
       </div>
     `;
 
-    // safer copy handler (no onclick string issues)
+    /* =========================
+       COPY BUTTON
+    ========================= */
+
     card.querySelector(".copy-btn").addEventListener("click", async () => {
       await navigator.clipboard.writeText(spiel.text);
 
       const btn = card.querySelector(".copy-btn");
-      const original = btn.innerText;
+      const old = btn.innerText;
 
       btn.innerText = "Copied!";
-      setTimeout(() => btn.innerText = original, 1200);
+      setTimeout(() => btn.innerText = old, 1200);
     });
+
+    /* =========================
+       DELETE BUTTON (ADMIN ONLY)
+    ========================= */
+
+    if (isAdmin) {
+      card.querySelector(".delete-btn").addEventListener("click", async () => {
+        await deleteDoc(doc(db, "spiels", spiel.id));
+        loadSpiels();
+      });
+    }
 
     spielGrid.appendChild(card);
   });
 }
 
 /* =========================
-   SAVE SPIEL
+   ADD SPIEL
 ========================= */
 
 window.saveSpiel = async function () {
@@ -146,48 +139,21 @@ window.saveSpiel = async function () {
   const text = document.getElementById("spielText").value.trim();
 
   if (!title || !text) {
-    alert("Please fill in all fields.");
+    alert("Fill all fields");
     return;
   }
 
-  await addDoc(
-    collection(db, isAdmin ? "spiels" : "pendingSpiels"),
-    { title, text }
-  );
+  await addDoc(collection(db, "spiels"), {
+    title,
+    text
+  });
 
   closeModal();
   loadSpiels();
 };
 
 /* =========================
-   EDIT (ADMIN ONLY)
-========================= */
-
-window.editSpiel = function (id) {
-
-  const spiel = spiels.find(s => s.id === id);
-  if (!spiel) return;
-
-  document.getElementById("spielTitle").value = spiel.title;
-  document.getElementById("spielText").value = spiel.text;
-
-  modal.style.display = "flex";
-};
-
-/* =========================
-   DELETE (ADMIN ONLY)
-========================= */
-
-window.deleteSpiel = function (id) {
-
-  deleteDoc(doc(db, "spiels", id)).then(() => {
-    loadSpiels();
-  });
-
-};
-
-/* =========================
-   MODAL CONTROL
+   MODAL
 ========================= */
 
 window.openModal = function () {
@@ -205,15 +171,6 @@ window.closeModal = function () {
 document.getElementById("searchInput").addEventListener("input", (e) => {
   renderSpiels(e.target.value);
 });
-
-/* =========================
-   CLOSE MODAL ON OUTSIDE CLICK
-========================= */
-
-window.onclick = function (event) {
-  if (event.target === modal) closeModal();
-  if (event.target === deleteModal) deleteModal.style.display = "none";
-};
 
 /* =========================
    INIT
