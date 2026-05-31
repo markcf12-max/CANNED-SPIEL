@@ -47,7 +47,7 @@ setPersistence(auth, browserLocalPersistence);
    ADMIN CONFIG
 ========================= */
 
-const ADMIN_EMAIL = "markcf12@gmail.com";
+const ADMIN_UID = "a9pjqoldM6Ugq7HZl9xHpyVQCUE2";
 
 /* =========================
    STATE
@@ -78,8 +78,7 @@ onAuthStateChanged(auth, (user) => {
 
   isAdmin =
     !!user &&
-    user.email &&
-    user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    user.uid === ADMIN_UID;
 
   updateUI();
   renderSpiels();
