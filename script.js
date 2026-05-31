@@ -13,7 +13,9 @@ import {
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
@@ -33,10 +35,13 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+getAnalytics(app);
 
 const db = getFirestore(app);
 const auth = getAuth(app);
+
+/* Keep login session */
+setPersistence(auth, browserLocalPersistence);
 
 /* =========================
    ADMIN CONFIG
@@ -66,7 +71,7 @@ const loginModal = document.getElementById("loginModal");
 const deleteModal = document.getElementById("deleteModal");
 
 /* =========================
-   AUTH
+   AUTH STATE
 ========================= */
 
 onAuthStateChanged(auth, (user) => {
@@ -76,31 +81,31 @@ onAuthStateChanged(auth, (user) => {
     user.email &&
     user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  updateAdminUI();
+  updateUI();
   renderSpiels();
-
-  if (isAdmin) {
-
-    authBtn.textContent = "Logout";
-    authBtn.onclick = logoutAdmin;
-
-  } else {
-
-    authBtn.textContent = "Admin Login";
-    authBtn.onclick = openLoginModal;
-  }
 });
 
 /* =========================
-   ADMIN UI
+   UI CONTROL
 ========================= */
 
-function updateAdminUI() {
+function updateUI() {
 
-  if (!addSpielBtn) return;
+  /* Add button */
+  if (addSpielBtn) {
+    addSpielBtn.style.display = isAdmin ? "block" : "none";
+  }
 
-  addSpielBtn.style.display =
-    isAdmin ? "block" : "none";
+  /* Auth button */
+  if (authBtn) {
+    if (isAdmin) {
+      authBtn.textContent = "Logout";
+      authBtn.onclick = logoutAdmin;
+    } else {
+      authBtn.textContent = "Admin Login";
+      authBtn.onclick = openLoginModal;
+    }
+  }
 }
 
 /* =========================
@@ -109,28 +114,18 @@ function updateAdminUI() {
 
 async function loadSpiels() {
 
-  try {
+  spiels = [];
 
-    spiels = [];
+  const snapshot = await getDocs(collection(db, "spiels"));
 
-    const snapshot =
-      await getDocs(collection(db, "spiels"));
-
-    snapshot.forEach((docSnap) => {
-
-      spiels.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
-
+  snapshot.forEach((docSnap) => {
+    spiels.push({
+      id: docSnap.id,
+      ...docSnap.data()
     });
+  });
 
-    renderSpiels();
-
-  } catch (error) {
-
-    console.error("Failed loading spiels:", error);
-  }
+  renderSpiels();
 }
 
 /* =========================
@@ -141,17 +136,12 @@ function renderSpiels(filter = "") {
 
   spielGrid.innerHTML = "";
 
-  const filtered = spiels.filter((spiel) =>
-    spiel.title
-      ?.toLowerCase()
-      .includes(filter.toLowerCase())
+  const filtered = spiels.filter((s) =>
+    s.title?.toLowerCase().includes(filter.toLowerCase())
   );
 
   if (!filtered.length) {
-
-    spielGrid.innerHTML =
-      "<p>No spiels found.</p>";
-
+    spielGrid.innerHTML = "<p>No spiels found.</p>";
     return;
   }
 
@@ -160,74 +150,48 @@ function renderSpiels(filter = "") {
     const card = document.createElement("div");
     card.className = "spiel-card";
 
-    card.innerHTML = `
-      <div class="spiel-title">
-        ${spiel.title}
-      </div>
-
-      <div class="spiel-content">
-        ${spiel.text}
-      </div>
-
-      <div class="card-buttons">
-
-        <button class="copy-btn">
-          Copy
-        </button>
-
-        ${
-          isAdmin
-            ? `<button class="delete-btn">Delete</button>`
-            : ""
-        }
-
-      </div>
-    `;
+    const buttons = document.createElement("div");
+    buttons.className = "card-buttons";
 
     /* COPY */
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "Copy";
 
-    card
-      .querySelector(".copy-btn")
-      .addEventListener("click", async () => {
+    copyBtn.onclick = async () => {
+      await navigator.clipboard.writeText(spiel.text);
 
-        try {
+      const old = copyBtn.textContent;
+      copyBtn.textContent = "Copied!";
 
-          await navigator.clipboard.writeText(
-            spiel.text
-          );
+      setTimeout(() => {
+        copyBtn.textContent = old;
+      }, 1200);
+    };
 
-          const btn =
-            card.querySelector(".copy-btn");
+    buttons.appendChild(copyBtn);
 
-          const original =
-            btn.textContent;
-
-          btn.textContent = "Copied!";
-
-          setTimeout(() => {
-            btn.textContent = original;
-          }, 1200);
-
-        } catch (error) {
-
-          console.error(error);
-        }
-      });
-
-    /* DELETE */
-
+    /* DELETE (ONLY ADMIN, NOT IN HTML STRING) */
     if (isAdmin) {
 
-      card
-        .querySelector(".delete-btn")
-        .addEventListener("click", () => {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.textContent = "Delete";
 
-          pendingDeleteId = spiel.id;
+      deleteBtn.onclick = () => {
+        pendingDeleteId = spiel.id;
+        openDeleteModal();
+      };
 
-          openDeleteModal();
-        });
+      buttons.appendChild(deleteBtn);
     }
 
+    card.innerHTML = `
+      <div class="spiel-title">${spiel.title}</div>
+      <div class="spiel-content">${spiel.text}</div>
+    `;
+
+    card.appendChild(buttons);
     spielGrid.appendChild(card);
   });
 }
@@ -238,142 +202,82 @@ function renderSpiels(filter = "") {
 
 window.saveSpiel = async function () {
 
-  if (!isAdmin) {
+  if (!isAdmin) return;
 
-    alert("Unauthorized");
-    return;
-  }
-
-  const title =
-    document.getElementById("spielTitle")
-      .value
-      .trim();
-
-  const text =
-    document.getElementById("spielText")
-      .value
-      .trim();
+  const title = document.getElementById("spielTitle").value.trim();
+  const text = document.getElementById("spielText").value.trim();
 
   if (!title || !text) {
-
     alert("Fill all fields");
     return;
   }
 
-  try {
+  await addDoc(collection(db, "spiels"), {
+    title,
+    text,
+    createdAt: Date.now()
+  });
 
-    await addDoc(
-      collection(db, "spiels"),
-      {
-        title,
-        text,
-        createdAt: Date.now()
-      }
-    );
+  document.getElementById("spielTitle").value = "";
+  document.getElementById("spielText").value = "";
 
-    document.getElementById("spielTitle").value = "";
-    document.getElementById("spielText").value = "";
-
-    closeModal();
-
-    await loadSpiels();
-
-  } catch (error) {
-
-    console.error(error);
-    alert("Failed to save spiel");
-  }
+  closeModal();
+  loadSpiels();
 };
 
 /* =========================
    LOGIN
 ========================= */
 
-window.openLoginModal = function () {
-
+window.openLoginModal = () => {
   loginModal.style.display = "flex";
 };
 
-window.closeLoginModal = function () {
-
+window.closeLoginModal = () => {
   loginModal.style.display = "none";
 };
 
 window.loginAdmin = async function () {
 
-  const email =
-    document
-      .getElementById("loginEmail")
-      .value
-      .trim();
-
-  const password =
-    document
-      .getElementById("loginPassword")
-      .value;
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
   try {
-
-    await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+    await signInWithEmailAndPassword(auth, email, password);
 
     document.getElementById("loginEmail").value = "";
     document.getElementById("loginPassword").value = "";
 
     closeLoginModal();
 
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "Invalid email or password."
-    );
+  } catch (err) {
+    console.error(err);
+    alert("Invalid login");
   }
 };
 
 async function logoutAdmin() {
-
-  try {
-
-    await signOut(auth);
-
-  } catch (error) {
-
-    console.error(error);
-  }
+  await signOut(auth);
 }
 
 /* =========================
-   ADD MODAL
+   MODALS
 ========================= */
 
 window.openModal = function () {
-
   if (!isAdmin) return;
-
   modal.style.display = "flex";
 };
 
 window.closeModal = function () {
-
   modal.style.display = "none";
 };
 
-/* =========================
-   DELETE MODAL
-========================= */
-
 window.openDeleteModal = function () {
-
   deleteModal.style.display = "flex";
 };
 
 window.closeDeleteModal = function () {
-
   deleteModal.style.display = "none";
 };
 
@@ -381,42 +285,21 @@ window.confirmDelete = async function () {
 
   if (!pendingDeleteId) return;
 
-  try {
+  await deleteDoc(doc(db, "spiels", pendingDeleteId));
 
-    await deleteDoc(
-      doc(
-        db,
-        "spiels",
-        pendingDeleteId
-      )
-    );
+  pendingDeleteId = null;
 
-    pendingDeleteId = null;
-
-    closeDeleteModal();
-
-    await loadSpiels();
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "Failed to delete spiel."
-    );
-  }
+  closeDeleteModal();
+  loadSpiels();
 };
 
 /* =========================
    SEARCH
 ========================= */
 
-document
-  .getElementById("searchInput")
-  .addEventListener("input", (e) => {
-
-    renderSpiels(e.target.value);
-  });
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  renderSpiels(e.target.value);
+});
 
 /* =========================
    INIT
