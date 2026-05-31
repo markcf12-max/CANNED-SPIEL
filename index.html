@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email Transaction Spiels</title>
 
-  <!-- Link CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -14,58 +13,167 @@
   <div class="container">
 
     <div class="top-bar">
+
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search spiel title...">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search spiel title..."
+        >
       </div>
 
-      <button class="add-btn" onclick="openModal()">
+      <button
+        id="addSpielBtn"
+        class="add-btn"
+        onclick="openModal()"
+        style="display:none;"
+      >
         + Add Spiel
       </button>
+
+      <button
+        id="authBtn"
+        class="auth-btn"
+      >
+        Admin Login
+      </button>
+
     </div>
 
-    <div class="spiel-grid" id="spielGrid"></div>
+    <div
+      class="spiel-grid"
+      id="spielGrid"
+    ></div>
 
   </div>
 
-  <!-- Modal -->
-  <div class="modal" id="modal">
+  <!-- =========================
+       ADD SPIEL MODAL
+  ========================= -->
+
+  <div
+    class="modal"
+    id="modal"
+  >
+
     <div class="modal-content">
-      <h2 id="modalTitle">Add Spiel</h2>
 
-      <input type="text" id="spielTitle" placeholder="Spiel Title">
+      <h2>Add Spiel</h2>
 
-      <textarea id="spielText" placeholder="Write your canned spiel here..."></textarea>
+      <input
+        type="text"
+        id="spielTitle"
+        placeholder="Spiel Title"
+      >
 
-      <button class="save-btn" onclick="saveSpiel()">
+      <textarea
+        id="spielText"
+        placeholder="Write your canned spiel here..."
+      ></textarea>
+
+      <button
+        class="save-btn"
+        onclick="saveSpiel()"
+      >
         Save Spiel
       </button>
-    </div>
-  </div>
-  
-  <!-- Delete Confirmation Modal -->
-<div class="modal" id="deleteModal">
-  <div class="modal-content delete-modal-content">
 
-    <h2>Delete Spiel</h2>
-
-    <p class="delete-text">
-      Are you sure you want to delete this spiel?
-    </p>
-
-    <div class="delete-actions">
-      <button class="cancel-btn" onclick="closeDeleteModal()">
-        Cancel
-      </button>
-
-      <button class="confirm-delete-btn" onclick="confirmDelete()">
-        Delete
-      </button>
     </div>
 
   </div>
-</div>
 
-  <!-- Link JS -->
-  <script type="module" src="script.js"></script>
+  <!-- =========================
+       LOGIN MODAL
+  ========================= -->
+
+  <div
+    class="modal"
+    id="loginModal"
+  >
+
+    <div class="modal-content login-modal-content">
+
+      <h2 class="login-title">
+        Admin Login
+      </h2>
+
+      <input
+        type="email"
+        id="loginEmail"
+        placeholder="Email Address"
+      >
+
+      <input
+        type="password"
+        id="loginPassword"
+        placeholder="Password"
+      >
+
+      <div class="login-actions">
+
+        <button
+          class="login-btn"
+          onclick="loginAdmin()"
+        >
+          Login
+        </button>
+
+        <button
+          class="close-login-btn"
+          onclick="closeLoginModal()"
+        >
+          Cancel
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- =========================
+       DELETE MODAL
+  ========================= -->
+
+  <div
+    class="modal"
+    id="deleteModal"
+  >
+
+    <div class="modal-content delete-modal-content">
+
+      <h2>Delete Spiel</h2>
+
+      <p class="delete-text">
+        Are you sure you want to delete this spiel?
+      </p>
+
+      <div class="delete-actions">
+
+        <button
+          class="cancel-btn"
+          onclick="closeDeleteModal()"
+        >
+          Cancel
+        </button>
+
+        <button
+          class="confirm-delete-btn"
+          onclick="confirmDelete()"
+        >
+          Delete
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script
+    type="module"
+    src="script.js"
+  ></script>
+
 </body>
 </html>
