@@ -304,8 +304,13 @@ window.openModal = function () {
 };
 
 window.closeModal = function () {
+
   modal.style.display = "none";
+
   editingId = null;
+
+  document.getElementById("spielTitle").value = "";
+  document.getElementById("spielText").value = "";
 };
 
 window.openDeleteModal = function () {
