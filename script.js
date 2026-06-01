@@ -6,7 +6,8 @@ import {
   addDoc,
   getDocs,
   deleteDoc,
-  doc
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 import {
@@ -40,7 +41,6 @@ getAnalytics(app);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* Keep login session */
 setPersistence(auth, browserLocalPersistence);
 
 /* =========================
@@ -56,6 +56,7 @@ const ADMIN_UID = "a9pjqoldM6Ugq7HZl9xHpyVQCUE2";
 let isAdmin = false;
 let spiels = [];
 let pendingDeleteId = null;
+let editingId = null;
 
 /* =========================
    DOM
@@ -76,12 +77,10 @@ const deleteModal = document.getElementById("deleteModal");
 
 onAuthStateChanged(auth, (user) => {
 
-  isAdmin =
-    !!user &&
-    user.uid === ADMIN_UID;
+  isAdmin = !!user && user.uid === ADMIN_UID;
 
   updateUI();
-  renderSpiels();
+  loadSpiels();
 });
 
 /* =========================
@@ -90,12 +89,10 @@ onAuthStateChanged(auth, (user) => {
 
 function updateUI() {
 
-  /* Add button */
   if (addSpielBtn) {
     addSpielBtn.style.display = isAdmin ? "block" : "none";
   }
 
-  /* Auth button */
   if (authBtn) {
     if (isAdmin) {
       authBtn.textContent = "Logout";
@@ -170,8 +167,18 @@ function renderSpiels(filter = "") {
 
     buttons.appendChild(copyBtn);
 
-    /* DELETE (ONLY ADMIN, NOT IN HTML STRING) */
+    /* ADMIN BUTTONS */
     if (isAdmin) {
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "edit-btn";
+      editBtn.textContent = "Edit";
+
+      editBtn.onclick = () => {
+        openEditModal(spiel);
+      };
+
+      buttons.appendChild(editBtn);
 
       const deleteBtn = document.createElement("button");
       deleteBtn.className = "delete-btn";
@@ -196,7 +203,7 @@ function renderSpiels(filter = "") {
 }
 
 /* =========================
-   SAVE SPIEL
+   SAVE / UPDATE SPIEL
 ========================= */
 
 window.saveSpiel = async function () {
@@ -211,17 +218,45 @@ window.saveSpiel = async function () {
     return;
   }
 
-  await addDoc(collection(db, "spiels"), {
-    title,
-    text,
-    createdAt: Date.now()
-  });
+  if (editingId) {
+
+    await updateDoc(doc(db, "spiels", editingId), {
+      title,
+      text
+    });
+
+    editingId = null;
+
+  } else {
+
+    await addDoc(collection(db, "spiels"), {
+      title,
+      text,
+      createdAt: Date.now()
+    });
+  }
 
   document.getElementById("spielTitle").value = "";
   document.getElementById("spielText").value = "";
 
   closeModal();
   loadSpiels();
+};
+
+/* =========================
+   EDIT
+========================= */
+
+window.openEditModal = function (spiel) {
+
+  if (!isAdmin) return;
+
+  editingId = spiel.id;
+
+  document.getElementById("spielTitle").value = spiel.title;
+  document.getElementById("spielText").value = spiel.text;
+
+  modal.style.display = "flex";
 };
 
 /* =========================
@@ -250,7 +285,6 @@ window.loginAdmin = async function () {
     closeLoginModal();
 
   } catch (err) {
-    console.error(err);
     alert("Invalid login");
   }
 };
@@ -270,6 +304,7 @@ window.openModal = function () {
 
 window.closeModal = function () {
   modal.style.display = "none";
+  editingId = null;
 };
 
 window.openDeleteModal = function () {
