@@ -51,26 +51,26 @@
        ADD SPIEL MODAL
   ========================= -->
 
-  <div
-    class="modal"
-    id="modal"
-  >
+<div class="modal" id="modal">
 
-    <div class="modal-content">
+  <div class="modal-content">
 
-      <h2 id="modalTitle">Add Spiel</h2>
+    <span class="close-modal" onclick="closeModal()">&times;</span>
 
-      <input
-        type="text"
-        id="spielTitle"
-        placeholder="Spiel Title"
-      >
+    <h2 id="modalTitle">Add Spiel</h2>
 
-      <textarea
-        id="spielText"
-        placeholder="Write your canned spiel here..."
-      ></textarea>
+    <input
+      type="text"
+      id="spielTitle"
+      placeholder="Spiel Title"
+    >
 
+    <textarea
+      id="spielText"
+      placeholder="Write your canned spiel here..."
+    ></textarea>
+
+    <div class="modal-actions">
       <button
         class="save-btn"
         onclick="saveSpiel()"
@@ -78,9 +78,17 @@
         Save Spiel
       </button>
 
+      <button
+        class="cancel-btn"
+        onclick="closeModal()"
+      >
+        Cancel
+      </button>
     </div>
 
   </div>
+
+</div>
 
   <!-- =========================
        LOGIN MODAL
