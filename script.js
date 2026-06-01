@@ -75,17 +75,13 @@ const deleteModal = document.getElementById("deleteModal");
    AUTH STATE
 ========================= */
 
-onAuthStateChanged(auth, (user) => {
-
-  console.log("AUTH USER:", user?.uid);
-  console.log("ADMIN UID:", ADMIN_UID);
+onAuthStateChanged(auth, async (user) => {
 
   isAdmin = !!user && user.uid === ADMIN_UID;
 
-  console.log("IS ADMIN:", isAdmin);
-
   updateUI();
-  loadSpiels();
+
+  await loadSpiels(); // important
 });
 
 /* =========================
