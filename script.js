@@ -421,19 +421,43 @@ scrollTopBtn.addEventListener("click", () => {
    ENTER TO LOGIN
 ========================= */
 
-["loginEmail", "loginPassword"].forEach(id => {
+const loginEmail =
+  document.getElementById("loginEmail");
 
-  document.getElementById(id)
-    .addEventListener("keydown", (e) => {
+const loginPassword =
+  document.getElementById("loginPassword");
 
-      if (e.key === "Enter") {
-        e.preventDefault();
-        loginAdmin();
-      }
+if (loginEmail) {
 
-    });
+  loginEmail.addEventListener("keydown", (e) => {
 
-});
+    if (e.key === "Enter") {
+
+      e.preventDefault();
+
+      window.loginAdmin();
+
+    }
+
+  });
+
+}
+
+if (loginPassword) {
+
+  loginPassword.addEventListener("keydown", (e) => {
+
+    if (e.key === "Enter") {
+
+      e.preventDefault();
+
+      window.loginAdmin();
+
+    }
+
+  });
+
+}
 
 
 /* =========================
