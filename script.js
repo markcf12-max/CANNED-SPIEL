@@ -77,7 +77,13 @@ const deleteModal = document.getElementById("deleteModal");
 
 onAuthStateChanged(auth, async (user) => {
 
+  console.log("USER:", user);
+  console.log("UID:", user?.uid);
+  console.log("EMAIL:", user?.email);
+
   isAdmin = !!user;
+
+  console.log("isAdmin:", isAdmin);
 
   updateUI();
 
