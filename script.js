@@ -269,16 +269,37 @@ window.openLoginModal = () => {
 };
 
 window.closeLoginModal = () => {
+
   loginModal.style.display = "none";
+
+  const errorBox =
+    document.getElementById("loginError");
+
+  errorBox.style.display = "none";
+  errorBox.textContent = "";
 };
 
 window.loginAdmin = async function () {
 
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const errorBox =
+    document.getElementById("loginError");
+
+  errorBox.style.display = "none";
+  errorBox.textContent = "";
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
     document.getElementById("loginEmail").value = "";
     document.getElementById("loginPassword").value = "";
@@ -286,7 +307,30 @@ window.loginAdmin = async function () {
     closeLoginModal();
 
   } catch (err) {
-    alert("Invalid login");
+
+    errorBox.style.display = "block";
+
+    switch (err.code) {
+
+      case "auth/invalid-credential":
+        errorBox.textContent =
+          "Incorrect email or password.";
+        break;
+
+      case "auth/invalid-email":
+        errorBox.textContent =
+          "Please enter a valid email address.";
+        break;
+
+      case "auth/too-many-requests":
+        errorBox.textContent =
+          "Too many login attempts. Please try again later.";
+        break;
+
+      default:
+        errorBox.textContent =
+          "Unable to sign in. Please try again.";
+    }
   }
 };
 
