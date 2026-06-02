@@ -384,3 +384,19 @@ body{
   cursor: pointer;
   border-radius: 6px;
 }
+
+/* =========================
+   LOGIN ERROR
+========================= */
+
+.login-error {
+  display: none;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #fecaca;
+}
