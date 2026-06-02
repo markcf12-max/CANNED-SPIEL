@@ -77,11 +77,11 @@ const deleteModal = document.getElementById("deleteModal");
 
 onAuthStateChanged(auth, async (user) => {
 
-  isAdmin = !!user && user.uid === ADMIN_UID;
+  isAdmin = !!user;
 
   updateUI();
 
-  await loadSpiels(); // important
+  await loadSpiels();
 });
 
 /* =========================
