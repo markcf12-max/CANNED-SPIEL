@@ -416,6 +416,26 @@ scrollTopBtn.addEventListener("click", () => {
 
 });
 
+
+/* =========================
+   ENTER TO LOGIN
+========================= */
+
+["loginEmail", "loginPassword"].forEach(id => {
+
+  document.getElementById(id)
+    .addEventListener("keydown", (e) => {
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        loginAdmin();
+      }
+
+    });
+
+});
+
+
 /* =========================
    INIT
 ========================= */
